@@ -17,7 +17,7 @@ strike_zone <- data.frame(
 )
 
 # color scale for probabilities
-probabiilty_color_scale <- scale_color_gradientn(
+probability_color_scale <- scale_color_gradientn(
   colors = c("#364B9A", "#EAECCC", "#A50026"),
   values = scales::rescale(c(0, .5, 1)),
   limits = c(0, 1), 
@@ -59,7 +59,7 @@ get_pitches <- function(current_batter) {
 
 # Plotting Functions ------------------------------------------------------
 
-# plot with player decision faceted with xR-optimal decision
+# player decision faceted with xR-optimal decision shaded by ev_diff
 four_panel_evdiff_plot <- function(current_pitches) {
   xR_opt.labs <- c("xR_Optimal = Take", "xR_Optimal = Swing")
   names(xR_opt.labs) <- c("0", "1")
@@ -84,6 +84,7 @@ four_panel_evdiff_plot <- function(current_pitches) {
   )
 }
 
+# player decision faceted with xR-optimal decision shaded by probsgt
 four_panel_probsgt_plot <- function(current_pitches) {
   xR_opt.labs <- c("xR_Optimal = Take", "xR_Optimal = Swing")
   names(xR_opt.labs) <- c("0", "1")
@@ -96,7 +97,7 @@ four_panel_probsgt_plot <- function(current_pitches) {
            ) %>%
            ggplot(aes(x = plate_x, y = plate_z)) +
            geom_point(aes(col = probsgt), alpha = 0.8) +
-           probabiilty_color_scale +
+           probability_color_scale +
            geom_path(data = strike_zone, aes(x, z), col = "black", lwd = 1) +
            facet_grid(
              xR_opt~swing,
@@ -107,40 +108,172 @@ four_panel_probsgt_plot <- function(current_pitches) {
   )
 }
 
+# count facet shaded by ev_diff
+count_evdiff_plot <- function(current_pitches) {
+  return(
+    current_pitches %>%
+      mutate(
+        strikes = as.factor(strikes),
+        balls = as.factor(balls)
+      ) %>%
+      ggplot(aes(x = plate_x, y = plate_z)) +
+      geom_point(aes(col = ev_diff), alpha = 0.8) +
+      ev_color_scale +
+      geom_path(data = strike_zone, aes(x, z), col = "black", lwd = 1) +
+      facet_grid(strikes~balls) +
+      plot_theme +
+      labs(
+        x = "balls",
+        y = "strikes"
+      )
+  )
+}
+
+# count facet shaded by probsgt
+count_probsgt_plot <- function(current_pitches) {
+  return(
+    current_pitches %>%
+      mutate(
+        strikes = as.factor(strikes),
+        balls = as.factor(balls)
+      ) %>%
+      ggplot(aes(x = plate_x, y = plate_z)) +
+      geom_point(aes(col = probsgt), alpha = 0.8) +
+      probability_color_scale +
+      geom_path(data = strike_zone, aes(x, z), col = "black", lwd = 1) +
+      facet_grid(strikes~balls) +
+      plot_theme +
+      labs(
+        x = "balls",
+        y = "strikes"
+      )
+  )
+}
+
+# situation facet shaded by ev_diff
+situation_evdiff_plot <- function(current_pitches) {
+  return(
+    current_pitches %>%
+      mutate(
+        outs = as.factor(outs),
+        n_baserunners = is_on_3b + is_on_2b + is_on_1b,
+        n_baserunners = as.factor(n_baserunners)
+      ) %>%
+      ggplot(aes(x = plate_x, y = plate_z)) +
+      geom_point(aes(col = ev_diff), alpha = 0.8) +
+      ev_color_scale +
+      geom_path(data = strike_zone, aes(x, z), col = "black", lwd = 1) +
+      facet_grid(outs~n_baserunners) +
+      plot_theme +
+      labs(
+        x = "Number of Baserunners",
+        y = "Outs"
+      )
+  )
+}
+
+# situation facet shaded by ev_diff
+situation_probsgt_plot <- function(current_pitches) {
+  return(
+    current_pitches %>%
+      mutate(
+        outs = as.factor(outs),
+        n_baserunners = is_on_3b + is_on_2b + is_on_1b,
+        n_baserunners = as.factor(n_baserunners)
+      ) %>%
+      ggplot(aes(x = plate_x, y = plate_z)) +
+      geom_point(aes(col = probsgt), alpha = 0.8) +
+      probability_color_scale +
+      geom_path(data = strike_zone, aes(x, z), col = "black", lwd = 1) +
+      facet_grid(outs~n_baserunners) +
+      plot_theme +
+      labs(
+        x = "Number of Baserunners",
+        y = "Outs"
+      )
+  )
+}
+
+
 # Shiny App ---------------------------------------------------------------
 
-ui <- fluidPage(
-  titlePanel("Batter Evaluation App"),
-  
-  # input batter
-  sidebarLayout(
-    sidebarPanel(
-      selectInput(
-        inputId = "current_batter",
-        label = "Batter",
-        choices = batters$player_name,
-        selected = "Trout, Mike"
-      ),
-      # selectInput(
-      #   inputId = "color_stat",
-      #   label = "Stat",
-      #   choices = c("Expected Value Difference", "Probability xR-Optimal = Swing"),
-      #   selected = "Expected Value Difference"
-      # )
-    ),
-    
-    # visualization
-    mainPanel(
-      plotOutput("ev_diff"),
-      plotOutput("probsgt")
-    )
-  )
+ui <- navbarPage("Batter Evaluation App",
+                 tabPanel("Four Panel Analysis",
+                          fluidPage(
+                            # input batter
+                            sidebarLayout(
+                              sidebarPanel(
+                                selectInput(
+                                  inputId = "four_panel_batter",
+                                  label = "Batter",
+                                  choices = batters$player_name,
+                                  selected = "Trout, Mike"
+                                  )
+                                ),
+                              # visualization
+                              mainPanel(
+                                plotOutput("four_panel_ev_diff"),
+                                plotOutput("four_panel_probsgt")
+                              )
+                            )
+                          )
+                   ),
+                 tabPanel("Count Analysis",
+                          fluidPage(
+                            # input batter
+                            sidebarLayout(
+                              sidebarPanel(
+                                selectInput(
+                                  inputId = "count_batter",
+                                  label = "Batter",
+                                  choices = batters$player_name,
+                                  selected = "Trout, Mike"
+                                  )
+                                ),
+                              # visualization
+                              mainPanel(
+                                plotOutput("count_ev_diff"),
+                                plotOutput("count_probsgt")
+                                )
+                              )
+                          )
+                 ),
+                 tabPanel("Situation Analysis",
+                          fluidPage(
+                            # input batter
+                            sidebarLayout(
+                              sidebarPanel(
+                                selectInput(
+                                  inputId = "situation_batter",
+                                  label = "Batter",
+                                  choices = batters$player_name,
+                                  selected = "Trout, Mike"
+                                )
+                              ),
+                              mainPanel(
+                                plotOutput("situation_ev_diff"),
+                                plotOutput("situation_probsgt")
+                              )
+                            )
+                          )
+                 )
 )
 
 server <- function(input, output) {
-  current_pitches <- reactive({get_pitches(input$current_batter)})
-  output$ev_diff <- renderPlot({four_panel_evdiff_plot(current_pitches())})
-  output$probsgt <- renderPlot({four_panel_probsgt_plot(current_pitches())})
+  # four panel
+  four_panel_pitches <- reactive({get_pitches(input$four_panel_batter)})
+  output$four_panel_ev_diff <- renderPlot({four_panel_evdiff_plot(four_panel_pitches())})
+  output$four_panel_probsgt <- renderPlot({four_panel_probsgt_plot(four_panel_pitches())})
+  
+  # count
+  count_pitches <- reactive({get_pitches(input$count_batter)})
+  output$count_ev_diff <- renderPlot({count_evdiff_plot(count_pitches())})
+  output$count_probsgt <- renderPlot({count_probsgt_plot(situation_pitches())})
+  
+  # situations
+  situation_pitches <- reactive({get_pitches(input$situation_batter)})
+  output$situation_ev_diff <- renderPlot({situation_evdiff_plot(situation_pitches())})
+  output$situation_probsgt <- renderPlot({situation_probsgt_plot(situation_pitches())})
 }
 
 shinyApp(ui, server)
