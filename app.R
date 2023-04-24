@@ -262,7 +262,50 @@ ui <- navbarPage("Batter Evaluation App",
                                 )
                               )
                             )
-                          )
+                          ),
+                 tabPanel("Documentation",
+                          
+                          # intro
+                          p("This app is based on an analysis in",
+                            span(em("A Bayesian approach to evaluating plate discipline ")),
+                            "by Ryan Yee and Sameer Deshpande.",
+                            "This app is designed visualize the results from our plate discipline framework for any batter in the 2021 MLB season that faced 1000 or more pitches."),
+                          
+                          p("There are two key metrics presented here:",
+                            "(i)",
+                            span(code("EV_Diff")),
+                            "and",
+                            "(ii)",
+                            span(code("P(xR_optimal)"))),
+                          
+                          p(span(code("EV Diff")),
+                            "is the difference between the expected runs from swinging and the expected runs from taking a pitch. A positive",
+                            span(code("EV Diff")),
+                            "indicates our model predicts swinging will lead to more runs and a negative",
+                            span(code("EV Diff")),
+                            "indicates our model predicts taking will lead to more runs."
+                            ),
+                          
+                          p(span(code("P(xR_optimal)")),
+                            "is the probability that swinging is the",
+                            span(code("xR_optimal")),
+                            "decision based on our model."),
+                          
+                          # four panel tab
+                          h4("Four Panel Analysis"),
+                          p("This tab shows pitches where the batter took (left) and swung (right) and the",
+                          span(code("xR_optimal")),
+                          "decision is to take (top) and swing (bottom)"),
+                          
+                          # count tab
+                          h4("Count Analysis"),
+                          p("This tab shows pitches the batter faced against different counts."),
+                          
+                          # situation tab
+                          h4("Situational Analysis"),
+                          p("This tab shows pitches the batter faced against different out-baserunner situations.")
+                 )
+                 
 )
 
 server <- function(input, output) {
