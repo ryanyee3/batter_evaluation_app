@@ -7,7 +7,6 @@ library(shiny)
 load("pitches.RData")
 load("batters.RData")
 
-
 # Plot Settings -----------------------------------------------------------
 
 # define the strike zone
@@ -41,7 +40,8 @@ plot_theme <- theme(
   axis.text = element_blank(),
   axis.ticks = element_blank(),
   plot.title = element_text(hjust = 0.5),
-  strip.background = element_rect(color="white", fill="white", size=0.5, linetype="solid")
+  strip.background = element_rect(color="white", fill="white", size=0.5, linetype="solid"),
+  legend.position = "bottom"
 )
 
 # Data Functions ----------------------------------------------------------
@@ -212,8 +212,10 @@ ui <- navbarPage("Batter Evaluation App",
                                 ),
                               # visualization
                               mainPanel(
-                                plotOutput("four_panel_ev_diff"),
-                                plotOutput("four_panel_probsgt")
+                                tabsetPanel(
+                                  tabPanel("EV Diff", plotOutput("four_panel_ev_diff")),
+                                  tabPanel("Probsgt", plotOutput("four_panel_probsgt"))
+                                )
                               )
                             )
                           )
@@ -232,8 +234,10 @@ ui <- navbarPage("Batter Evaluation App",
                                 ),
                               # visualization
                               mainPanel(
-                                plotOutput("count_ev_diff"),
-                                plotOutput("count_probsgt")
+                                tabsetPanel(
+                                  tabPanel("EV Diff", plotOutput("count_ev_diff")),
+                                  tabPanel("Probsgt", plotOutput("count_probsgt"))
+                                  )
                                 )
                               )
                           )
@@ -251,12 +255,14 @@ ui <- navbarPage("Batter Evaluation App",
                                 )
                               ),
                               mainPanel(
-                                plotOutput("situation_ev_diff"),
-                                plotOutput("situation_probsgt")
+                                tabsetPanel(
+                                  tabPanel("EV Diff", plotOutput("situation_ev_diff")),
+                                  tabPanel("Probsgt", plotOutput("situation_probsgt"))
+                                  )
+                                )
                               )
                             )
                           )
-                 )
 )
 
 server <- function(input, output) {
